@@ -1,17 +1,17 @@
-# r3f-mendil
+# r3f-mandeal
 
 <p align="center">
-  <a href="https://billylz.github.io/r3f-medil/"><img alt="Canlı demoyu aç" src="https://img.shields.io/badge/%E2%96%B6%20CANLI%20DEMO-A%C3%A7-ff9b42?style=for-the-badge"></a>
+  <a href="https://billylz.github.io/r3f-mandeal/"><img alt="Canlı demoyu aç" src="https://img.shields.io/badge/%E2%96%B6%20CANLI%20DEMO-A%C3%A7-ff9b42?style=for-the-badge"></a>
 </p>
 
-<p align="center"><b>Demo:</b> <a href="https://billylz.github.io/r3f-medil/">https://billylz.github.io/r3f-medil/</a></p>
+<p align="center"><b>Demo:</b> <a href="https://billylz.github.io/r3f-mandeal/">https://billylz.github.io/r3f-mandeal/</a></p>
 
 n × m parçacıktan oluşan dokulu bir kumaşın **kütle–yay modeli** ve **Verlet
 entegrasyonu** ile gerçek zamanlı 3B simülasyonu (React Three Fiber).
 
 ## Demo
 
-**▶ https://billylz.github.io/r3f-medil/**: tarayıcıda kurulum gerektirmeden çalışır. `main`'e her push'ta GitHub Actions ile otomatik güncellenir.
+**▶ https://billylz.github.io/r3f-mandeal/**: tarayıcıda kurulum gerektirmeden çalışır. `main`'e her push'ta GitHub Actions ile otomatik güncellenir.
 
 ![Bayrak senaryosu](docs/bayrak.png)
 
