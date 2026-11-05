@@ -62,6 +62,14 @@ export class ClothSim {
   time = 0
   steps = 0
   exploded = false
+  /** Yerçekimi yönü (birim vektör). Telefon eğimiyle değişebilir. */
+  gravityDir: [number, number, number] = [0, -1, 0]
+  /**
+   * Ek dış ivme [m/s²], sabit olmayan bütün parçacıklara uygulanır.
+   * Telefon sallanınca: kumaş telefonun çerçevesinde durur, bu yüzden
+   * hissettiği atalet ivmesi telefonun ivmesinin tersidir (−a_telefon).
+   */
+  external: [number, number, number] = [0, 0, 0]
   private force: Float32Array
   private accumulator = 0
   private grabbed = -1
@@ -124,6 +132,11 @@ export class ClothSim {
 
     // Konum Verlet:  x' = x + (x − x_prev)(1 − c) + a·Δt²
     const keep = 1 - p.damping
+    const gd = this.gravityDir
+    const ext = this.external
+    const acc0 = gd[0] * p.gravity + ext[0]
+    const acc1 = gd[1] * p.gravity + ext[1]
+    const acc2 = gd[2] * p.gravity + ext[2]
     for (let i = 0; i < g.count; i++) {
       const w = invMass[i]
       const j = 3 * i
@@ -135,7 +148,7 @@ export class ClothSim {
       }
       for (let k = 0; k < 3; k++) {
         const x = pos[j + k]
-        const a = force[j + k] * w - (k === 1 ? p.gravity : 0)
+        const a = force[j + k] * w + (k === 0 ? acc0 : k === 1 ? acc1 : acc2)
         pos[j + k] = x + (x - prev[j + k]) * keep + a * dt2
         prev[j + k] = x
       }

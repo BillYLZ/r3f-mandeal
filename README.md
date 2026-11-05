@@ -34,6 +34,7 @@ entegrasyonu** ile gerçek zamanlı 3B simülasyonu (React Three Fiber).
 - **Hata ayıklama katmanları:** parçacıklar (kırmızı: sabit), üç yay türü ayrı renklerde, gerilme renkleri, tel kafes
 - **Yırtılma:** bağıl uzaması eşiği aşan yay kopar, kopan hücreler mesh'ten silinir ve yırtığın iki yakası tamamen ayrılır. Eşik panelden ayarlanır.
 - **Etkileşim:** kumaşı fareyle sürükle (çekerek yırt), **Ctrl + sürükle** veya **✂ Kes** aracıyla bıçakla kes, **Shift + tık** ile nokta sabitle veya serbest bırak
+- **Telefonla sallama:** telefonda **📱 Salla** düğmesine basıp telefonu salla; kumaş telefona tutturulmuş gibi savrulur (telefonun ivmesi kumaşa atalet kuvveti olarak etki eder). İsteğe bağlı **Eğim** modunda yerçekimi telefonun gerçek aşağı yönünü izler. iPhone'da önce hareket izni istenir.
 - **Hazır senaryolar:** köşelerden asılı, perde, bayrak, masa örtüsü (küre üstüne), yırtılma, hamak
 - KaTeX ile denklem paneli, enerji ve uzama göstergeleri
 
@@ -57,6 +58,7 @@ src/physics/     # React'ten bağımsız, Node'da test edilen fizik çekirdeği
   forces.ts      # Hooke + sönüm, rüzgâr
   constraints.ts # PBD mesafe kısıtı, zemin/küre çarpışması
   tearing.ts     # yırtılma: yay kopması, hücre silme, bıçak
+src/motion.ts    # telefon hareket sensörü (DeviceMotion)
   ClothSim.ts    # Verlet adımı, sabit adım biriktiricisi, sürükleme, ölçümler
   presets.ts     # varsayılanlar ve hazır senaryolar
 src/scene/       # R3F bileşenleri (kumaş mesh'i, yay çizgileri, parçacıklar, dokular)

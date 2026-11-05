@@ -5,6 +5,17 @@ import type { SpringKind } from './physics/springs.ts'
 
 export type Tool = 'drag' | 'cut'
 
+export interface MotionSettings {
+  /** Telefon sensörü açık mı */
+  enabled: boolean
+  /** Sallama: telefonun ivmesi kumaşa atalet kuvveti olarak etki eder */
+  shake: boolean
+  /** Eğim: yerçekimi telefonun gerçek aşağı yönünü izler */
+  tilt: boolean
+  /** Sallama kazancı */
+  gain: number
+}
+
 export type TextureKind = 'ekose' | 'cizgili' | 'kanvas' | 'izgara' | 'duz' | 'yuklenen'
 
 export interface Layers {
@@ -38,6 +49,8 @@ interface State {
   /** Fare aracı: kumaşı çek veya bıçakla kes (Ctrl basılıyken tersi) */
   tool: Tool
   setTool: (t: Tool) => void
+  motion: MotionSettings
+  setMotion: (patch: Partial<MotionSettings>) => void
   setParams: (f: (p: ClothParams) => ClothParams) => void
   reset: () => void
   setPlaying: (p: boolean) => void
@@ -69,6 +82,8 @@ export const useCloth = create<State>((set, get) => ({
   stats: null,
   tool: 'drag',
   setTool: (tool) => set({ tool }),
+  motion: { enabled: false, shake: true, tilt: false, gain: 1.5 },
+  setMotion: (patch) => set((s) => ({ motion: { ...s.motion, ...patch } })),
   setParams: (f) => {
     const old = get().params
     const params = f(old)

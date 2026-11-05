@@ -1,11 +1,74 @@
 import { Grid, OrbitControls } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
+import * as THREE from 'three'
+import { motion } from '../motion.ts'
 import { ClothSim } from '../physics/ClothSim.ts'
 import { SPRING_KINDS } from '../physics/springs.ts'
 import { useCloth } from '../store.ts'
 import { ClothMesh } from './ClothMesh.tsx'
 import { Particles, PinMarkers, SpringLines } from './DebugLayers.tsx'
+
+const DEADZONE = 0.4 // m/s², sensör gürültüsü
+const _dir = new THREE.Vector3()
+
+/**
+ * Telefon sensörünü simülasyona bağlar. Ekran eksenleri (sağ, yukarı, ekrandan dışarı)
+ * kameranın yatay yönüne göre dünyaya çevrilir; "yukarı" her zaman dünya yukarısıdır,
+ * böylece telefon dik tutulurken yerçekimi tam aşağıyı gösterir.
+ */
+function applyMotion(sim: ClothSim, camera: THREE.Camera) {
+  const m = useCloth.getState().motion
+  if (!m.enabled || !motion.active) {
+    sim.external = [0, 0, 0]
+    sim.gravityDir = [0, -1, 0]
+    return
+  }
+  camera.getWorldDirection(_dir)
+  let bx = -_dir.x
+  let bz = -_dir.z
+  const bl = Math.hypot(bx, bz) || 1
+  bx /= bl
+  bz /= bl
+  // sağ = yukarı × arka
+  const rx = bz
+  const rz = -bx
+  const toWorld = ([x, y, z]: [number, number, number]): [number, number, number] => [rx * x + bx * z, y, rz * x + bz * z]
+
+  if (m.shake) {
+    const s = motion.shake
+    const mag = Math.hypot(s[0], s[1], s[2])
+    const k = mag > DEADZONE ? (-m.gain * (mag - DEADZONE)) / mag : 0
+    const w = toWorld(s)
+    sim.external = [w[0] * k, w[1] * k, w[2] * k]
+  } else {
+    sim.external = [0, 0, 0]
+  }
+
+  if (m.tilt) {
+    const u = toWorld(motion.up)
+    const l = Math.hypot(u[0], u[1], u[2])
+    sim.gravityDir = l > 1 ? [-u[0] / l, -u[1] / l, -u[2] / l] : [0, -1, 0]
+  } else {
+    sim.gravityDir = [0, -1, 0]
+  }
+}
+
+/** Dar (dikey) ekranlarda kumaş sığsın diye kamerayı başta uzaklaştır. */
+function FitCamera() {
+  const camera = useThree((s) => s.camera)
+  const aspect = useThree((s) => s.size.width / s.size.height)
+  useEffect(() => {
+    if (!(camera instanceof THREE.PerspectiveCamera) || aspect >= 1) return
+    const halfWidth = 1.6 // m, kumaş + kenar payı
+    const dist = Math.max(4.6, halfWidth / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * aspect))
+    camera.position.set(0, 1.5, dist)
+    camera.lookAt(0, 1.3, 0)
+    // Yalnızca ilk açılışta; sonra kullanıcı kamerayı serbestçe döndürür
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [camera])
+  return null
+}
 
 function Colliders() {
   const c = useCloth((s) => s.params.colliders)
@@ -37,9 +100,12 @@ export function ClothScene() {
 
   useEffect(() => () => sim.release(), [sim])
 
+  const camera = useThree((s) => s.camera)
+
   useFrame((_, delta) => {
     const st = useCloth.getState()
     sim.params = st.params
+    applyMotion(sim, camera)
     const t0 = performance.now()
     let steps = 0
     if (st.playing) {
@@ -93,8 +159,9 @@ export function ClothScene() {
       <Particles sim={sim} />
       <PinMarkers sim={sim} />
       <Colliders />
+      <FitCamera />
       <Grid args={[30, 30]} cellSize={0.25} sectionSize={1} cellColor="#1e2540" sectionColor="#2e3966" fadeDistance={18} infiniteGrid position-y={-0.001} />
-      <OrbitControls makeDefault target={[0, 1.3, 0]} enableDamping maxPolarAngle={Math.PI * 0.495} minDistance={0.8} maxDistance={14} />
+      <OrbitControls makeDefault target={[0, 1.3, 0]} enableDamping maxPolarAngle={Math.PI * 0.495} minDistance={0.8} maxDistance={16} />
     </>
   )
 }

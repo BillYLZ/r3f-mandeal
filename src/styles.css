@@ -87,6 +87,11 @@ button.accent { background: #4a2a0c; border-color: var(--accent); color: #ffd2a8
   .controls { left: 16px; right: 16px; transform: none; bottom: 12px; justify-content: center; }
   .controls button { padding: 5px 8px; font-size: 12px; }
   .legend { display: none; }
-  .side { top: auto; bottom: 64px; left: 16px; right: 16px; width: auto; max-height: 55dvh; }
+  .side { top: 92px; bottom: auto; left: 16px; right: 16px; width: auto; max-height: calc(100dvh - 250px); }
   .side.closed { left: auto; }
+}
+
+.badge.live { color: var(--teal); border-color: rgba(66, 230, 200, 0.5); }
+@media (max-width: 760px) {
+  .controls .step { display: none; }
 }

@@ -1,4 +1,6 @@
 import { SPRING_KINDS } from '../physics/springs.ts'
+import { useEffect, useState } from 'react'
+import { motion } from '../motion.ts'
 import { useCloth } from '../store.ts'
 import { fmt } from './widgets.tsx'
 
@@ -8,11 +10,19 @@ export function Hud() {
   const reset = useCloth((st) => st.reset)
   const springs = SPRING_KINDS.filter((k) => p.springs[k].enabled).length
   const unstable = p.solver === 'force' && s && p.dt > s.criticalDt
+  const motionOn = useCloth((st) => st.motion.enabled)
+  const [sensorOk, setSensorOk] = useState(true)
+  useEffect(() => {
+    if (!motionOn) return
+    const id = setInterval(() => setSensorOk(performance.now() - motion.lastEvent < 1500), 500)
+    return () => clearInterval(id)
+  }, [motionOn])
   return (
     <div className="panel hud">
       <div className="title">
         <h1>Kumaş simülasyonu</h1>
         <span className="badge">{p.solver === 'pbd' ? 'PBD' : 'Kütle–yay'}</span>
+        {motionOn && <span className={`badge ${sensorOk ? 'live' : ''}`}>📱 {sensorOk ? 'sensör' : 'veri yok'}</span>}
       </div>
       <div className="dim">
         {p.n} × {p.m} parçacık · {springs}/3 yay türü · Verlet

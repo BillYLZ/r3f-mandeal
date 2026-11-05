@@ -260,7 +260,30 @@ for (const damped of [false, true]) {
   check(Math.abs(pos[1] - cut.params.elevation) < 1e-6, 'üst yarı yerinde kaldı')
 }
 
-// 10) Performans
+// 10) Telefon hareketi: yerçekimi yönü ve dış (atalet) ivmesi
+{
+  // Üst kenardan asılı kumaş düzlem içinde gerilemez; ekrana dik (z) yönde serbestçe salınır
+  const meanZ = (s: ClothSim) => {
+    let z = 0
+    for (let i = 0; i < s.grid.count; i++) z += s.grid.pos[3 * i + 2]
+    return z / s.grid.count
+  }
+  const tilted = make((p) => (p.pin = 'top'))
+  tilted.gravityDir = [0, -Math.SQRT1_2, Math.SQRT1_2]
+  for (let i = 0; i < 120; i++) tilted.advance(1 / 60)
+  check(meanZ(tilted) > 0.3, `telefon eğilince kumaş yeni aşağı yöne sarktı (ortalama z = ${meanZ(tilted).toFixed(2)} m)`)
+
+  // Telefon −z yönünde ivmelenince kumaş (telefona göre) +z yönüne savrulur
+  const shaken = make((p) => (p.pin = 'top'))
+  shaken.external = [0, 0, 15]
+  for (let i = 0; i < 15; i++) shaken.advance(1 / 60)
+  check(meanZ(shaken) > 0.1, `sallanınca kumaş savruldu (Δz = ${meanZ(shaken).toFixed(3)} m)`)
+  const top = shaken.grid.pos.slice(0, 3 * shaken.grid.n)
+  const ref = make((p) => (p.pin = 'top')).grid.pos
+  check(top.every((v, i) => v === ref[i]), 'sabit noktalar telefona bağlı kaldı (ivmeden etkilenmedi)')
+}
+
+// 11) Performans
 {
   const sim = make(() => {})
   const t0 = performance.now()

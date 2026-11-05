@@ -4,6 +4,7 @@ import { PRESETS, SOLVER_DT } from '../physics/presets.ts'
 import { SPRING_KINDS, type SpringKind } from '../physics/springs.ts'
 import { SPRING_COLORS } from '../scene/DebugLayers.tsx'
 import { useCloth } from '../store.ts'
+import { MotionButton } from './Controls.tsx'
 import { Check, Section, Seg, Slider, fmt } from './widgets.tsx'
 
 export const SPRING_LABELS: Record<SpringKind, string> = {
@@ -30,6 +31,8 @@ export function Params() {
   const setWind = (patch: Partial<ClothParams['wind']>) => setParams((o) => ({ ...o, wind: { ...o.wind, ...patch } }))
   const setCol = (patch: Partial<ClothParams['colliders']>) => setParams((o) => ({ ...o, colliders: { ...o.colliders, ...patch } }))
   const force = p.solver === 'force'
+  const motionCfg = useCloth((s) => s.motion)
+  const setMotion = useCloth((s) => s.setMotion)
 
   return (
     <div className="params">
@@ -150,6 +153,20 @@ export function Params() {
         <p className="dim">
           Kumaşı çekerek yırt veya alttaki <b>✂ Kes</b> aracıyla (ya da <b>Ctrl + sürükle</b>) bıçakla kes. Bıçak, yırtılma kapalıyken de çalışır. <b>↺ Sıfırla</b> kumaşı onarır.
         </p>
+      </Section>
+
+      <Section title="Telefon hareketi">
+        <p className="dim">
+          Telefonda <b>📱 Salla</b> düğmesine bas ve telefonu salla: kumaş telefona tutturulmuş gibi sallanır. iPhone'da önce hareket izni istenir.
+        </p>
+        <div className="row">
+          <MotionButton />
+        </div>
+        <Check label="Sallama (telefonun ivmesi)" checked={motionCfg.shake} onChange={(shake) => setMotion({ shake })} />
+        {motionCfg.shake && (
+          <Slider label="Sallama şiddeti" value={motionCfg.gain} min={0.2} max={5} step={0.1} digits={1} unit="×" onChange={(gain) => setMotion({ gain })} />
+        )}
+        <Check label="Eğim (yerçekimi telefonun aşağısını izler)" checked={motionCfg.tilt} onChange={(tilt) => setMotion({ tilt })} />
       </Section>
 
       <Section title="Çarpışma">
