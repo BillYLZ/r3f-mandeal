@@ -44,7 +44,7 @@ export default function App() {
       <Hud />
       <SidePanel />
       <Controls />
-      <div className="legend">Sürükle: kumaşı çek · Shift + tık: pin aç/kapa · Boşluk: oynat/durdur · R: sıfırla</div>
+      <div className="legend">Sürükle: kumaşı çek · Ctrl + sürükle: kes · Shift + tık: pin aç/kapa · Boşluk: oynat/durdur · R: sıfırla</div>
     </>
   )
 }

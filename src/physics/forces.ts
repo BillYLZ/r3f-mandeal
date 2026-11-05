@@ -18,9 +18,10 @@ export interface Wind {
  */
 export function addSpringForces(g: Grid, s: SpringSet, k: number, kd: number, dt: number, force: Float32Array) {
   const { pos, prev } = g
-  const { pairs, rest } = s
+  const { pairs, rest, alive } = s
   const invDt = 1 / dt
   for (let j = 0; j < s.count; j++) {
+    if (!alive[j]) continue
     const a = 3 * pairs[2 * j]
     const b = 3 * pairs[2 * j + 1]
     const dx = pos[b] - pos[a]
@@ -48,8 +49,8 @@ export function addSpringForces(g: Grid, s: SpringSet, k: number, kd: number, dt
  * Üçgen başına rüzgâr: F = c · (N·v_rel) · N / (2|N|),  N = e1 × e2 (|N| = 2A).
  * Kuvvet üçgenin üç köşesine eşit dağıtılır.
  */
-export function addWindForces(g: Grid, wind: Wind, time: number, dt: number, force: Float32Array) {
-  const { pos, prev, index } = g
+export function addWindForces(g: Grid, index: Uint32Array, wind: Wind, time: number, dt: number, force: Float32Array) {
+  const { pos, prev } = g
   const invDt = 1 / dt
   const t = wind.turbulence
   for (let k = 0; k < index.length; k += 3) {

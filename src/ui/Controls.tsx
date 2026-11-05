@@ -10,6 +10,8 @@ export function Controls() {
   const setTimeScale = useCloth((s) => s.setTimeScale)
   const stepOnce = useCloth((s) => s.stepOnce)
   const reset = useCloth((s) => s.reset)
+  const tool = useCloth((s) => s.tool)
+  const setTool = useCloth((s) => s.setTool)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -35,6 +37,14 @@ export function Controls() {
       <button onClick={reset} title="R">
         ↺ Sıfırla
       </button>
+      <div className="seg" title="Ctrl basılıyken araç geçici olarak değişir">
+        <button className={tool === 'drag' ? 'on' : ''} onClick={() => setTool('drag')}>
+          ✋ Çek
+        </button>
+        <button className={tool === 'cut' ? 'on' : ''} onClick={() => setTool('cut')}>
+          ✂ Kes
+        </button>
+      </div>
       <span className="dim">Hız</span>
       <div className="seg">
         {SPEEDS.map((v) => (

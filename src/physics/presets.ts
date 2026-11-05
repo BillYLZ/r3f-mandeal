@@ -26,6 +26,7 @@ export const DEFAULT_PARAMS: ClothParams = {
     sphere: { enabled: false, x: 0, y: 0.8, z: 0, r: 0.5 },
     friction: 0.3,
   },
+  tearing: { enabled: false, threshold: 0.5 },
 }
 
 /** Çözücü değişince önerilen adım: kuvvet modu çok daha küçük Δt ister. */
@@ -71,6 +72,25 @@ export const PRESETS: Preset[] = [
       elevation: 2,
       wind: { ...p.wind, x: 0, z: 0 },
       colliders: { ...p.colliders, friction: 0.5, sphere: { enabled: true, x: 0, y: 0.9, z: 0, r: 0.6 } },
+    }),
+  },
+  {
+    label: 'Yırtılma',
+    apply: (p) => ({
+      ...p,
+      n: 40,
+      m: 32,
+      orientation: 'vertical',
+      pin: 'top',
+      width: 2.4,
+      height: 2,
+      elevation: 2.6,
+      solver: 'pbd',
+      dt: 1 / 240,
+      iterations: 12,
+      wind: { ...p.wind, x: 0, z: 0 },
+      colliders: { ...p.colliders, sphere: { ...p.colliders.sphere, enabled: false } },
+      tearing: { enabled: true, threshold: 0.4 },
     }),
   },
   {

@@ -39,7 +39,7 @@ export function Params() {
             <button
               key={pr.label}
               onClick={() => {
-                setParams(pr.apply)
+                setParams((o) => pr.apply({ ...o, tearing: { ...o.tearing, enabled: false } }))
                 reset()
               }}
             >
@@ -132,6 +132,24 @@ export function Params() {
         <Slider label="z" value={p.wind.z} min={-15} max={15} step={0.1} digits={1} unit="m/s" onChange={(z) => setWind({ z })} />
         <Slider label="Dalgalanma" value={p.wind.turbulence} min={0} max={1.5} step={0.01} onChange={(turbulence) => setWind({ turbulence })} />
         <Slider label="Sürükleme katsayısı" value={p.wind.drag} min={0} max={3} step={0.01} unit="kg/m³" onChange={(drag) => setWind({ drag })} />
+      </Section>
+
+      <Section title="Yırtılma">
+        <Check label="Aşırı gerilen yaylar kopsun" checked={p.tearing.enabled} onChange={(enabled) => set({ tearing: { ...p.tearing, enabled } })} />
+        {p.tearing.enabled && (
+          <Slider
+            label="Kopma eşiği (uzama)"
+            value={p.tearing.threshold}
+            min={0.05}
+            max={2}
+            step={0.01}
+            display={(v) => `%${fmt(v * 100, 0)}`}
+            onChange={(threshold) => set({ tearing: { ...p.tearing, threshold } })}
+          />
+        )}
+        <p className="dim">
+          Kumaşı çekerek yırt veya alttaki <b>✂ Kes</b> aracıyla (ya da <b>Ctrl + sürükle</b>) bıçakla kes. Bıçak, yırtılma kapalıyken de çalışır. <b>↺ Sıfırla</b> kumaşı onarır.
+        </p>
       </Section>
 
       <Section title="Çarpışma">

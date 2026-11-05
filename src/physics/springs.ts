@@ -28,6 +28,8 @@ export interface SpringSet {
   /** [a0, b0, a1, b1, ...] */
   pairs: Uint32Array
   rest: Float32Array
+  /** 1 → sağlam, 0 → kopmuş (yırtılma) */
+  alive: Uint8Array
 }
 
 /** Formülle beklenen yay sayısı (testler ve HUD için). */
@@ -62,5 +64,5 @@ export function createSprings(kind: SpringKind, n: number, m: number, pos: Float
     const b = 3 * pairs[2 * s + 1]
     rest[s] = Math.hypot(pos[b] - pos[a], pos[b + 1] - pos[a + 1], pos[b + 2] - pos[a + 2])
   }
-  return { kind, count, pairs: Uint32Array.from(pairs), rest }
+  return { kind, count, pairs: Uint32Array.from(pairs), rest, alive: new Uint8Array(count).fill(1) }
 }

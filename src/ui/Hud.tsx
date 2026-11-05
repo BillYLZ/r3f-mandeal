@@ -55,6 +55,12 @@ export function Hud() {
                   <td>{fmt(s.springEnergy * 1000, 2)} mJ</td>
                 </tr>
               )}
+              {s.torn > 0 && (
+                <tr>
+                  <th>Kopan yay</th>
+                  <td className="warn">{s.torn.toLocaleString('tr-TR')}</td>
+                </tr>
+              )}
               <tr>
                 <th>En büyük uzama</th>
                 <td className={s.maxStretch > 0.1 ? 'warn' : ''}>%{fmt(s.maxStretch * 100, 2)}</td>

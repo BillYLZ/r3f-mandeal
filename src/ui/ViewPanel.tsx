@@ -71,7 +71,7 @@ export function ViewPanel() {
 
       <Section title="Etkileşim">
         <p className="dim">
-          Kumaşı fareyle tutup sürükle. <b>Shift + tık</b> bir noktayı sabitler veya serbest bırakır. Boş alanda sürüklemek kamerayı döndürür.
+          Kumaşı fareyle tutup sürükle. <b>Ctrl + sürükle</b> (veya ✂ Kes aracı) bıçakla keser. <b>Shift + tık</b> bir noktayı sabitler veya serbest bırakır. Boş alanda sürüklemek kamerayı döndürür.
         </p>
       </Section>
     </div>

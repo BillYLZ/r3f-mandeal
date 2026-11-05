@@ -3,6 +3,8 @@ import type { ClothParams, ClothStats } from './physics/ClothSim.ts'
 import { DEFAULT_PARAMS, GRID_KEYS } from './physics/presets.ts'
 import type { SpringKind } from './physics/springs.ts'
 
+export type Tool = 'drag' | 'cut'
+
 export type TextureKind = 'ekose' | 'cizgili' | 'kanvas' | 'izgara' | 'duz' | 'yuklenen'
 
 export interface Layers {
@@ -33,6 +35,9 @@ interface State {
   color: string
   uploadedUrl: string | null
   stats: LiveStats | null
+  /** Fare aracı: kumaşı çek veya bıçakla kes (Ctrl basılıyken tersi) */
+  tool: Tool
+  setTool: (t: Tool) => void
   setParams: (f: (p: ClothParams) => ClothParams) => void
   reset: () => void
   setPlaying: (p: boolean) => void
@@ -62,6 +67,8 @@ export const useCloth = create<State>((set, get) => ({
   color: '#c8553d',
   uploadedUrl: null,
   stats: null,
+  tool: 'drag',
+  setTool: (tool) => set({ tool }),
   setParams: (f) => {
     const old = get().params
     const params = f(old)

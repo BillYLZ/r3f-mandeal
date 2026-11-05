@@ -7,6 +7,8 @@ entegrasyonu** ile gerçek zamanlı 3B simülasyonu (React Three Fiber).
 
 ![Masa örtüsü senaryosu](docs/masa-ortusu.png)
 
+![Yırtılma: bıçakla kesilmiş ve çekilerek delinmiş kumaş](docs/yirtilma.png)
+
 ## Özellikler
 
 - **Üç yay türü**, her biri ayrı açılıp kapanır ve ayarlanır:
@@ -20,8 +22,9 @@ entegrasyonu** ile gerçek zamanlı 3B simülasyonu (React Three Fiber).
 - **Kuvvetler ve çarpışma:** yerçekimi, üçgen başına aerodinamik rüzgâr ve dalgalanma, zemin ve küre çarpışması, sürtünme
 - **Doku:** ekose, çizgili, kanvas, UV ızgarası, düz renk veya kendi yüklediğin görsel
 - **Hata ayıklama katmanları:** parçacıklar (kırmızı: sabit), üç yay türü ayrı renklerde, gerilme renkleri, tel kafes
-- **Etkileşim:** kumaşı fareyle sürükle, **Shift + tık** ile nokta sabitle veya serbest bırak
-- **Hazır senaryolar:** köşelerden asılı, perde, bayrak, masa örtüsü (küre üstüne), hamak
+- **Yırtılma:** bağıl uzaması eşiği aşan yay kopar, kopan hücreler mesh'ten silinir ve yırtığın iki yakası tamamen ayrılır. Eşik panelden ayarlanır.
+- **Etkileşim:** kumaşı fareyle sürükle (çekerek yırt), **Ctrl + sürükle** veya **✂ Kes** aracıyla bıçakla kes, **Shift + tık** ile nokta sabitle veya serbest bırak
+- **Hazır senaryolar:** köşelerden asılı, perde, bayrak, masa örtüsü (küre üstüne), yırtılma, hamak
 - KaTeX ile denklem paneli, enerji ve uzama göstergeleri
 
 ## Çalıştırma
@@ -43,6 +46,7 @@ src/physics/     # React'ten bağımsız, Node'da test edilen fizik çekirdeği
   springs.ts     # structural / shear / bending yay üretimi
   forces.ts      # Hooke + sönüm, rüzgâr
   constraints.ts # PBD mesafe kısıtı, zemin/küre çarpışması
+  tearing.ts     # yırtılma: yay kopması, hücre silme, bıçak
   ClothSim.ts    # Verlet adımı, sabit adım biriktiricisi, sürükleme, ölçümler
   presets.ts     # varsayılanlar ve hazır senaryolar
 src/scene/       # R3F bileşenleri (kumaş mesh'i, yay çizgileri, parçacıklar, dokular)
@@ -56,9 +60,11 @@ docs/kumas-plani.md     # araç planı ve yol haritası
 `npm test` şunları doğrular: yay sayıları formüllerle eşleşiyor; dinlenme
 durumu korunuyor; serbest düşüş ½gt²; tek yay periyodu 2π√(m/k); enerji
 sönümsüzde korunuyor, sönümlüde azalıyor; pin'ler sabit kalıyor; sonuç
-deterministik; kumaş küreye ve zemine girmiyor.
+deterministik; kumaş küreye ve zemine girmiyor; yırtılma kapalıyken hiçbir yay
+kopmuyor, açıkken çekilen kumaş yırtılıyor; yırtık sonrası kalan her üçgen ve
+bending yayı sağlam yaylara dayanıyor; ortadan kesilen kumaşın alt yarısı düşüyor.
 
 ## Yol haritası
 
-Plan ve sonraki aşamalar (yırtılma, video/GLB kaydı, Web Worker) için:
+Plan ve sonraki aşamalar (video/GLB kaydı, Web Worker) için:
 [docs/kumas-plani.md](docs/kumas-plani.md)

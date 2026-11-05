@@ -2,6 +2,7 @@ import { collide, satisfySprings, type Colliders } from './constraints.ts'
 import { addSpringForces, addWindForces, type Wind } from './forces.ts'
 import { createGrid, type Grid, type GridSpec } from './grid.ts'
 import { SPRING_KINDS, createSprings, type SpringKind, type SpringSet } from './springs.ts'
+import { TearMap } from './tearing.ts'
 
 export type Solver = 'force' | 'pbd'
 
@@ -27,6 +28,13 @@ export interface SolverParams {
   springs: Record<SpringKind, SpringParams>
   wind: Wind
   colliders: Colliders
+  tearing: Tearing
+}
+
+export interface Tearing {
+  enabled: boolean
+  /** Kopma eşiği: (l − L0)/L0 bu değeri aşınca yay kopar */
+  threshold: number
 }
 
 export interface ClothParams extends GridSpec, SolverParams {}
@@ -39,6 +47,8 @@ export interface ClothStats {
   springEnergy: number
   /** Structural yaylardaki en büyük uzama oranı (l − L0)/L0 */
   maxStretch: number
+  /** Kopan structural + shear yay sayısı */
+  torn: number
   exploded: boolean
 }
 
@@ -47,6 +57,7 @@ const MAX_STEPS_PER_ADVANCE = 2000
 export class ClothSim {
   grid: Grid
   springs: Record<SpringKind, SpringSet>
+  tear: TearMap
   params: ClothParams
   time = 0
   steps = 0
@@ -64,6 +75,17 @@ export class ClothSim {
       SPRING_KINDS.map((k) => [k, createSprings(k, params.n, params.m, this.grid.pos)]),
     ) as Record<SpringKind, SpringSet>
     this.force = new Float32Array(3 * this.grid.count)
+    this.tear = new TearMap(this.grid, this.springs)
+  }
+
+  /** Yalnızca sağlam hücrelerin üçgenleri (mesh ve rüzgâr için) */
+  get index() {
+    return this.tear.index
+  }
+
+  /** Bıçak: `p` çevresindeki yayları kes. */
+  cut(p: [number, number, number], r: number) {
+    return this.tear.cut(p, r)
   }
 
   /** Kare süresi kadar ilerle; fizik her zaman sabit `dt` ile adımlanır. */
@@ -91,7 +113,7 @@ export class ClothSim {
     force.fill(0)
 
     if (p.wind.drag > 0 && (p.wind.x !== 0 || p.wind.y !== 0 || p.wind.z !== 0)) {
-      addWindForces(g, p.wind, this.time, dt, force)
+      addWindForces(g, this.tear.index, p.wind, this.time, dt, force)
     }
     if (p.solver === 'force') {
       for (const kind of SPRING_KINDS) {
@@ -132,6 +154,8 @@ export class ClothSim {
     } else {
       collide(g, p.colliders)
     }
+
+    if (p.tearing.enabled) this.tear.tearOverstretched(p.tearing.threshold)
 
     this.time += dt
     this.steps++
@@ -216,6 +240,7 @@ export class ClothSim {
       if (!sp.enabled || p.solver !== 'force') continue
       const s = this.springs[kind]
       for (let j = 0; j < s.count; j++) {
+        if (!s.alive[j]) continue
         const e = this.springLength(s, j) - s.rest[j]
         springEnergy += 0.5 * sp.k * e * e
       }
@@ -223,9 +248,10 @@ export class ClothSim {
     let maxStretch = 0
     const st = this.springs.structural
     for (let j = 0; j < st.count; j++) {
+      if (!st.alive[j]) continue
       maxStretch = Math.max(maxStretch, (this.springLength(st, j) - st.rest[j]) / st.rest[j])
     }
-    return { time: this.time, steps: this.steps, kinetic, potential, springEnergy, maxStretch, exploded: this.exploded }
+    return { time: this.time, steps: this.steps, kinetic, potential, springEnergy, maxStretch, torn: this.tear.torn, exploded: this.exploded }
   }
 
   springLength(s: SpringSet, j: number) {

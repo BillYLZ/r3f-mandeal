@@ -8,8 +8,9 @@ import type { SpringSet } from './springs.ts'
  */
 export function satisfySprings(g: Grid, s: SpringSet, stiffness: number) {
   const { pos, invMass } = g
-  const { pairs, rest } = s
+  const { pairs, rest, alive } = s
   for (let j = 0; j < s.count; j++) {
+    if (!alive[j]) continue
     const ia = pairs[2 * j]
     const ib = pairs[2 * j + 1]
     const wa = invMass[ia]

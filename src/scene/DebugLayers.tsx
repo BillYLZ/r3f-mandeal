@@ -45,14 +45,15 @@ export function SpringLines({ sim, kind }: { sim: ClothSim; kind: SpringKind }) 
     let b = base.b
     for (let j = 0; j < s.count; j++) {
       const a = 3 * s.pairs[2 * j]
-      const c = 3 * s.pairs[2 * j + 1]
+      // Kopmuş yay: sıfır uzunluklu doğru parçası (çizilmez)
+      const c = s.alive[j] ? 3 * s.pairs[2 * j + 1] : a
       out[6 * j] = p[a]
       out[6 * j + 1] = p[a + 1]
       out[6 * j + 2] = p[a + 2]
       out[6 * j + 3] = p[c]
       out[6 * j + 4] = p[c + 1]
       out[6 * j + 5] = p[c + 2]
-      if (stress) {
+      if (stress && s.alive[j]) {
         const l = Math.hypot(p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2])
         const k = stressColor((l - s.rest[j]) / s.rest[j], tmp)
         r = k.r

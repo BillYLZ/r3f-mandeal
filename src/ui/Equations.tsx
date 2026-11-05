@@ -50,7 +50,12 @@ export function Equations() {
       <p>Her üçgene bağıl hava hızının normal bileşeniyle orantılı kuvvet, üç köşeye eşit bölünür:</p>
       <Tex>{String.raw`\mathbf{N} = (\mathbf{x}_2-\mathbf{x}_1)\times(\mathbf{x}_3-\mathbf{x}_1),\qquad \mathbf{F} = c_w\,\frac{\mathbf{N}\cdot(\mathbf{v}_{\text{rüzgâr}} - \bar{\mathbf{v}})}{2\,|\mathbf{N}|}\,\mathbf{N}`}</Tex>
 
-      <h2>6 · Enerji</h2>
+      <h2 className={p.tearing.enabled ? 'active' : ''}>6 · Yırtılma</h2>
+      <p>Structural veya shear yay, bağıl uzaması eşiği aşınca kalıcı olarak kopar (eşik ε = %{fmt(p.tearing.threshold * 100, 0)}):</p>
+      <Tex>{String.raw`\frac{l - L_0}{L_0} > \varepsilon \;\Rightarrow\; \text{yay kopar}`}</Tex>
+      <p>Bir hücrenin (iki üçgen) yaylarından biri koparsa hücre mesh'ten silinir ve köşegenleri de kopar. İki yanı da boşalan kenar ile üzerinden geçtiği yay kopan bending yayı da kaldırılır; böylece yırtığın iki yakası tamamen ayrılır.</p>
+
+      <h2>7 · Enerji</h2>
       <Tex>{String.raw`E = \sum_i \tfrac12 m |\mathbf{v}_i|^2 + \sum_i m\,g\,y_i + \sum_{\text{yay}} \tfrac12 k\,(l - L_0)^2`}</Tex>
     </div>
   )

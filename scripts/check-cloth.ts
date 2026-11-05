@@ -192,7 +192,75 @@ for (const damped of [false, true]) {
   check(minY >= 0, `en alçak parçacık y = ${minY.toFixed(3)} m`)
 }
 
-// 9) Performans
+// 9) Yırtılma
+{
+  const pull = (enabled: boolean) => {
+    const s = make((p) => {
+      p.pin = 'top'
+      p.tearing = { enabled, threshold: 0.5 }
+    })
+    for (let i = 0; i < 60; i++) s.advance(1 / 60)
+    const g = s.grid.pos
+    const i0 = 29 * 30 + 15
+    const x = g[3 * i0]
+    s.grab(i0, [x, g[3 * i0 + 1], g[3 * i0 + 2]])
+    for (let f = 0; f < 120; f++) {
+      s.moveGrab([x, 1 - f * 0.01, 0])
+      s.advance(1 / 60)
+    }
+    return s
+  }
+  const intact = pull(false)
+  check(intact.tear.torn === 0 && intact.index.length === intact.grid.index.length, 'yırtılma kapalıyken hiçbir yay kopmuyor')
+  const torn = pull(true)
+  check(torn.tear.torn > 0, `aşağı çekilen kumaş yırtıldı (${torn.tear.torn} yay koptu)`)
+  check(torn.index.length < torn.grid.index.length, `mesh'ten ${(torn.grid.index.length - torn.index.length) / 6} hücre silindi`)
+
+  // Tutarlılık: kalan her üçgenin kenarları sağlam, her bending yayının iki yarısı sağlam
+  const ok = (s: typeof torn) => {
+    const alive = new Set<string>()
+    for (const kind of ['structural', 'shear'] as const) {
+      const sp = s.springs[kind]
+      for (let j = 0; j < sp.count; j++) {
+        if (!sp.alive[j]) continue
+        const a = sp.pairs[2 * j]
+        const b = sp.pairs[2 * j + 1]
+        alive.add(`${Math.min(a, b)}-${Math.max(a, b)}`)
+      }
+    }
+    const has = (a: number, b: number) => alive.has(`${Math.min(a, b)}-${Math.max(a, b)}`)
+    const idx = s.index
+    for (let k = 0; k < idx.length; k += 3) {
+      if (!has(idx[k], idx[k + 1]) || !has(idx[k + 1], idx[k + 2]) || !has(idx[k], idx[k + 2])) return false
+    }
+    const bd = s.springs.bending
+    for (let j = 0; j < bd.count; j++) {
+      if (!bd.alive[j]) continue
+      const a = bd.pairs[2 * j]
+      const b = bd.pairs[2 * j + 1]
+      if (!has(a, (a + b) / 2) || !has((a + b) / 2, b)) return false
+    }
+    return true
+  }
+  check(ok(torn), 'kalan üçgenlerin ve bending yaylarının hepsi sağlam yaylara dayanıyor')
+
+  // Bıçak: ortadan yatay kesilen kumaşın alt yarısı düşer
+  const cut = make((p) => {
+    p.pin = 'top'
+    p.colliders.ground.enabled = false
+  })
+  const { n, m, pos } = cut.grid
+  const yMid = pos[3 * ((m >> 1) * n) + 1]
+  for (let x = -1.1; x <= 1.1; x += 0.02) cut.cut([x, yMid, 0], 0.05)
+  check(ok(cut), 'kesikten sonra topoloji tutarlı')
+  const bottom = 3 * (n * m - 1) + 1
+  const yBottom = pos[bottom]
+  for (let i = 0; i < 60; i++) cut.advance(1 / 60)
+  check(yBottom - pos[bottom] > 1.5, `kesilen alt yarı serbest düştü (${(yBottom - pos[bottom]).toFixed(2)} m)`)
+  check(Math.abs(pos[1] - cut.params.elevation) < 1e-6, 'üst yarı yerinde kaldı')
+}
+
+// 10) Performans
 {
   const sim = make(() => {})
   const t0 = performance.now()

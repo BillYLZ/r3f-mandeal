@@ -13,12 +13,18 @@ function useClothGeometry(sim: ClothSim) {
     pos.setUsage(THREE.DynamicDrawUsage)
     g.setAttribute('position', pos)
     g.setAttribute('uv', new THREE.BufferAttribute(sim.grid.uv, 2))
-    g.setIndex(new THREE.BufferAttribute(sim.grid.index, 1))
+    g.setIndex(new THREE.BufferAttribute(sim.index, 1))
     g.computeVertexNormals()
     return g
   }, [sim])
   useEffect(() => () => geom.dispose(), [geom])
+  const topology = useRef(sim.tear.version)
   useFrame(() => {
+    // Yırtılma: kopan hücrelerin üçgenleri indeksten çıkarılır
+    if (topology.current !== sim.tear.version) {
+      topology.current = sim.tear.version
+      geom.setIndex(new THREE.BufferAttribute(sim.index, 1))
+    }
     geom.attributes.position.needsUpdate = true
     geom.computeVertexNormals()
     geom.computeBoundingSphere()
@@ -58,7 +64,7 @@ function ProceduralMaterial() {
   return <Material map={map} />
 }
 
-/** Kumaş yüzeyi + fareyle sürükleme (Shift+tık: pin aç/kapa) */
+/** Kumaş yüzeyi + fare etkileşimi: sürükle, Shift+tık pin, bıçak (Ctrl veya ✂ aracı) */
 export function ClothMesh({ sim }: { sim: ClothSim }) {
   const geom = useClothGeometry(sim)
   const texture = useCloth((s) => s.texture)
@@ -67,6 +73,26 @@ export function ClothMesh({ sim }: { sim: ClothSim }) {
   const { camera, gl, controls } = useThree()
   const plane = useRef(new THREE.Plane())
   const ray = useRef(new THREE.Raycaster())
+  const mesh = useRef<THREE.Mesh>(null)
+
+  const pointerRay = (ev: PointerEvent) => {
+    const r = gl.domElement.getBoundingClientRect()
+    const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1)
+    ray.current.setFromCamera(ndc, camera)
+    return ray.current
+  }
+
+  /** Bıçak: imlecin altındaki kumaş noktasının çevresindeki yaylar kesilir */
+  const startCut = (p: THREE.Vector3) => {
+    const { width, height, n, m } = sim.params
+    const radius = 0.75 * Math.max(width / (n - 1), height / (m - 1))
+    sim.cut([p.x, p.y, p.z], radius)
+    return (ev: PointerEvent) => {
+      if (!mesh.current) return
+      const hit = pointerRay(ev).intersectObject(mesh.current, false)[0]
+      if (hit) sim.cut([hit.point.x, hit.point.y, hit.point.z], radius)
+    }
+  }
 
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!e.face) return
@@ -85,19 +111,21 @@ export function ClothMesh({ sim }: { sim: ClothSim }) {
       sim.togglePin(best)
       return
     }
-    const p = new THREE.Vector3(pos[3 * best], pos[3 * best + 1], pos[3 * best + 2])
-    plane.current.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()).negate(), p)
-    sim.grab(best, [p.x, p.y, p.z])
     const ctl = controls as unknown as { enabled: boolean } | null
     if (ctl) ctl.enabled = false
+    const cutting = (useCloth.getState().tool === 'cut') !== (e.ctrlKey || e.metaKey)
 
-    const el = gl.domElement
-    const onMove = (ev: PointerEvent) => {
-      const r = el.getBoundingClientRect()
-      const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1)
-      ray.current.setFromCamera(ndc, camera)
-      const hit = ray.current.ray.intersectPlane(plane.current, new THREE.Vector3())
-      if (hit) sim.moveGrab([hit.x, hit.y, hit.z])
+    let onMove: (ev: PointerEvent) => void
+    if (cutting) {
+      onMove = startCut(e.point)
+    } else {
+      const p = new THREE.Vector3(pos[3 * best], pos[3 * best + 1], pos[3 * best + 2])
+      plane.current.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()).negate(), p)
+      sim.grab(best, [p.x, p.y, p.z])
+      onMove = (ev: PointerEvent) => {
+        const hit = pointerRay(ev).ray.intersectPlane(plane.current, new THREE.Vector3())
+        if (hit) sim.moveGrab([hit.x, hit.y, hit.z])
+      }
     }
     const onUp = () => {
       sim.release()
@@ -110,7 +138,7 @@ export function ClothMesh({ sim }: { sim: ClothSim }) {
   }
 
   return (
-    <mesh geometry={geom} visible={visible} castShadow receiveShadow onPointerDown={onPointerDown} frustumCulled={false}>
+    <mesh ref={mesh} geometry={geom} visible={visible} castShadow receiveShadow onPointerDown={onPointerDown} frustumCulled={false}>
       {texture === 'yuklenen' && url ? (
         <Suspense fallback={<Material map={null} />}>
           <UploadedMaterial url={url} />
